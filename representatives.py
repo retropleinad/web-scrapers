@@ -2,18 +2,12 @@ import requests
 from bs4 import BeautifulSoup
 
 HOUSE_LINK = "https://house.texas.gov/members/member-page/?district={0}"
-SENATE_LINK = "https://senate.texas.gov/members.php?d={0}"
 
 HOUSE_FILE = "house.txt"
-SENATE_FILE = "senate.txt"
 
 
-def scrape(link, senate=False):
-    if senate:
-        members = 30
-    else:
-        members = 150
-    for i in range(1, members + 1):
+def scrape(link):
+    for i in range(1, 151):
         entries = scrape_one(link, i)
         output("house.txt", entries)
 
@@ -30,13 +24,15 @@ def scrape_one(link, district):
         "name": soup.find("h2").get_text(),
         "district": "District {0}".format(str(district)),
         "email": format_href(email),
-        "phone": soup.find(string=lambda text: area_code in text).replace("\n", "", 2).replace("\r", "").strip(),
+        "phone": soup.find(string=lambda text: area_code in text).replace("\n", "", 2) \
+                                                                 .replace("\r", "") \
+                                                                 .strip(),
         "room": soup.find(string=lambda text: "Room" in text)
     }
     return out
 
 
-def format_href(href, senate=False):
+def format_href(href):
     house_link = "house.texas.gov/members"
     formatted_href = str(href).split(">")[0] \
                               .split("<")[1] \
@@ -55,4 +51,9 @@ def output(file, data, delimiter=";"):
         out.write("\n")
 
 
-scrape(HOUSE_LINK)
+def main():
+    scrape(HOUSE_LINK)
+
+
+if __name__ == "__main__":
+    main()
