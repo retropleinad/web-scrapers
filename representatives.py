@@ -9,7 +9,7 @@ HOUSE_FILE = "house.txt"
 def scrape(link):
     for i in range(1, 151):
         entries = scrape_one(link, i)
-        output("house.txt", entries)
+        output(HOUSE_FILE, entries)
 
 
 def scrape_one(link, district):
