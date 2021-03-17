@@ -1,17 +1,31 @@
 import requests
 from bs4 import BeautifulSoup
 
+"""
+This is a web scraper to take data from each Texas House member's website over : 
+    a.) Name
+    b.) District Number
+    c.) Email
+    d.) Phone Number
+    e.) Office number
+
+This data is then output to a file in CSV format
+"""
+
 HOUSE_LINK = "https://house.texas.gov/members/member-page/?district={0}"
 
 HOUSE_FILE = "house.txt"
 
 
+# Method called to scrape data.
+# Link is the portal that includes a list of every house member and a link to their websites
 def scrape(link):
     for i in range(1, 151):
         entries = scrape_one(link, i)
         output(HOUSE_FILE, entries)
 
 
+# Method to scrape one house member's website
 def scrape_one(link, district):
     area_code = "512"
     link = link.format(str(district))
@@ -32,6 +46,7 @@ def scrape_one(link, district):
     return out
 
 
+# Formats href to output the url
 def format_href(href):
     house_link = "house.texas.gov/members"
     formatted_href = str(href).split(">")[0] \
@@ -42,6 +57,7 @@ def format_href(href):
     return house_link + formatted_href
 
 
+# Outputs data into a CSV
 def output(file, data, delimiter=";"):
     with open(file, "a") as out:
         for key, value in data.items():
