@@ -1,14 +1,32 @@
-import requests
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+
 from bs4 import BeautifulSoup
 
-headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36'}
 URL = 'https://prolifewhistleblower.com/anonymous-form/'
+PATH = 'D:\Programs\ChromeDriver\chromedriver.exe'
+
+
+def tutorial():
+    driver = webdriver.Chrome(executable_path=PATH)
+    driver.get('http://www.python.org')
+    assert 'Python' in driver.title
+    elem = driver.find_element_by_name('q')
+    elem.clear()
+    elem.send_keys('pycon')
+    elem.send_keys(Keys.RETURN)
+    assert 'No Results found.' not in driver.page_source
+    driver.close()
 
 
 def scrape(link):
-    page = requests.get(link, headers=headers)
-    soup = BeautifulSoup(page.content, 'html.parser')
+    driver = webdriver.Chrome(executable_path=PATH)
+    driver.get(link)
+    element = driver.find_element_by_class_name('forminator-class')
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
     print(soup)
+    print(element)
+    driver.close()
 
 
 scrape(URL)

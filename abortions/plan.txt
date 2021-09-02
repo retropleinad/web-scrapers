@@ -9,3 +9,5 @@ Goals:
 
 Later:
 1.) Text generator AI
+
+forminator-row
