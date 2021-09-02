@@ -1,0 +1,11 @@
+Goals:
+0.) Explore the website
+1.) Submit a form
+2.) Create a UI
+1.) Create a list of common names
+2.) Connect to a proxy
+3.)
+
+
+Later:
+1.) Text generator AI
