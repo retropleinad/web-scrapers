@@ -1,3 +1,19 @@
+"""
+apartment_scraper.py
+
+About: This script pulls apartment listings from apartments.com that match a certain criteria.
+This script then appends walkability information for each apartment from walkscore.com
+
+Functions:
+1.) build_walkscore_link: Takes an address and creates a walkscore.com link
+2.) build_apartments_link: Takes city, state, and search criteria and creates an apartments.com search link
+3.) get_scores: Takes a walkscore.com link and grabs the scores from the html
+4.) append_walkscore: Takes a dict of apartments.com information and appends walk/transit/bike score
+5.) get_apartments: Parses apartments.com HTML and outputs data to a csv
+6.) main: where we run multiple searches for different cities
+"""
+
+
 import requests
 import json
 import time
