@@ -42,12 +42,21 @@ class WegmanScraper:
                 time.sleep(15)
 
     def search_item(self, item):
+        self.search_bar.click()
+        self.search_bar.clear()
         self.search_bar.send_keys(item)
+        self.search_bar.submit()
+        time.sleep(30)
+
         section = self.driver.find_element(By.CLASS_NAME, 'css-8uhtka')
-        return section
+        return section.text
 
     def quit(self):
         self.driver.quit()
 
 
+# Runs but is one behind
 scraper = WegmanScraper()
+print(scraper.search_item('pork'))
+print(scraper.search_item('celery'))
+scraper.quit()
