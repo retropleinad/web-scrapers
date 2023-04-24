@@ -1,9 +1,11 @@
 import time
+import os
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
 from selenium.common.exceptions import StaleElementReferenceException
+from selenium.webdriver.common.keys import Keys
 
 
 BASE_URL = 'https://shop.wegmans.com/search?search_term={term}'
@@ -43,7 +45,8 @@ class WegmanScraper:
 
     def search_item(self, item):
         self.search_bar.click()
-        self.search_bar.clear()
+        self.search_bar.send_keys(Keys.CONTROL + "a")
+        self.search_bar.send_keys(Keys.DELETE)
         self.search_bar.send_keys(item)
         self.search_bar.submit()
         time.sleep(30)
@@ -55,8 +58,32 @@ class WegmanScraper:
         self.driver.quit()
 
 
-# Runs but is one behind
+def parse_input(in_file_name, out_file_name):
+    searches = []
+    with open(in_file_name, mode='r') as input_file:
+        scraper = WegmanScraper()
+
+        ingredient = input_file.readline()
+        while ingredient != '':
+            ingredient = input_file.readline().strip()
+            location = scraper.search_item(ingredient)
+            print(ingredient + "," + location)
+            searches.append((ingredient, location))
+
+    if os.path.isfile(out_file_name):
+        os.remove(out_file_name)
+
+    with open(out_file_name, newline='', mode='a') as output_file:
+        for search in searches:
+            output_file.write(search[0] + ", " + search[1])
+
+
+
+"""
 scraper = WegmanScraper()
-print(scraper.search_item('pork'))
-print(scraper.search_item('celery'))
+print(scraper.search_item('pork')) # Meat
+print(scraper.search_item('celery')) # Produce
 scraper.quit()
+"""
+
+parse_input('groceries_import', 'groceries_export.csv')
