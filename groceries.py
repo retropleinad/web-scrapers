@@ -3,8 +3,6 @@ import os
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.select import Select
-from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.keys import Keys
 
 
@@ -70,6 +68,8 @@ def parse_input(in_file_name, out_file_name):
             print(ingredient + "," + location)
             searches.append((ingredient, location))
 
+        scraper.quit()
+
     if os.path.isfile(out_file_name):
         os.remove(out_file_name)
 
@@ -77,13 +77,5 @@ def parse_input(in_file_name, out_file_name):
         for search in searches:
             output_file.write(search[0] + ", " + search[1])
 
-
-
-"""
-scraper = WegmanScraper()
-print(scraper.search_item('pork')) # Meat
-print(scraper.search_item('celery')) # Produce
-scraper.quit()
-"""
 
 parse_input('groceries_import', 'groceries_export.csv')
