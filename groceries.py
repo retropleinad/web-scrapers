@@ -1,5 +1,7 @@
 """
-Web scraper that pulls data from the Wegmans website
+Web scraper that pulls the aisle an item is on from the Wegmans website.
+This is part of a larger project that includes a grocery spreadsheet.
+The data generated from this scraper allows sorting and filtering by aisle in the spreadsheet.
 """
 
 
@@ -11,7 +13,19 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
 
+# URL that is formatted to search for a grocery item
 BASE_URL = 'https://shop.wegmans.com/search?search_term={term}'
+
+
+"""
+WegmanScraper:
+
+Description: Selenium scraper wrapper that enables searching the Wegmans store for an item's aisle location
+
+Methods:
+1.) search_item(self, item): 
+2.) quit(self): Quits the Selenium scraper object
+"""
 
 
 class WegmanScraper:
@@ -71,23 +85,44 @@ class WegmanScraper:
         self.driver.quit()
 
 
+"""
+parse_input:
+
+Description: Takes input file with grocery items and outputs item and aisle to an output file.
+Also prints item and aisle as the script runs.
+
+params:
+1.) in_file_name: the name of the input file
+2.) out_file_name: the name of the output file to be generated.
+    If this file already exists, it will be deleted.
+    
+File format:
+1.) input file: txt file where each grocery item is a new line
+2.) output file: csv where each line is in the format of item, aisle
+"""
+
+
 def parse_input(in_file_name, out_file_name):
     searches = []
     with open(in_file_name, mode='r') as input_file:
         scraper = WegmanScraper()
 
-        ingredient = input_file.readline()
+        # Pulls item from file and searches in store
+        ingredient = input_file.readline().strip()
         while ingredient != '':
-            ingredient = input_file.readline().strip()
             location = scraper.search_item(ingredient)
             print(ingredient + "," + location)
             searches.append((ingredient, location))
+            ingredient = input_file.readline().strip()
 
         scraper.quit()
 
+    # Check if the output file exists and remove it if it does
     if os.path.isfile(out_file_name):
         os.remove(out_file_name)
 
+    # Output items and aisles to the output file in csv format
+    # Format: item, aisle
     with open(out_file_name, newline='', mode='a') as output_file:
         for search in searches:
             output_file.write(search[0] + ", " + search[1])
