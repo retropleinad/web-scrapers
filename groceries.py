@@ -1,128 +1,96 @@
-import requests
-import urllib.request
-import time
-import webbrowser
+"""
+Web scraper that pulls data from the Wegmans website
+"""
 
-from bs4 import BeautifulSoup
+
+import time
+import os
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.select import Select
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.webdriver.common.keys import Keys
 
-
-header = {
-    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36" ,
-    'referer': 'https://www.google.com/'
-}
 
 BASE_URL = 'https://shop.wegmans.com/search?search_term={term}'
 
 
-# Search with bs4 and requests with special header
-# Still returns JavaScript error
-def header_search_item(item):
-    search_url = BASE_URL.format(term=item)
-    page = requests.get(search_url, headers=header)
-    soup = BeautifulSoup(page.content, 'html.parser')
-    print(soup)
+class WegmanScraper:
+
+    def __init__(self):
+        # initiate web driver and go to the Bethlehem store page
+        # future update: allow customization for which store
+        self.driver = webdriver.Chrome()
+        self.initial_url = 'https://www.wegmans.com/stores/bethlehem-pa/'
+        self.driver.get(self.initial_url)
+
+        # Find button that reads 'shop store' and click it
+        # This allows us to set the store we're searching to Bethlehem
+        shop_store_button = self.driver.find_element(By.XPATH, '//*[contains(text(), \'Shop this Store\')]')
+        self.driver.execute_script('arguments[0].click();', shop_store_button)
+        time.sleep(60)
+
+        # Find and select 'in store' button so that we can search for an item
+        buttons = self.driver.find_elements(By.TAG_NAME, 'button')
+        for b in buttons:
+            if b.text == 'In Store':
+                b.click()
+                time.sleep(30)
+                break
+
+        # Find search bar item that actually works and save it
+        search_bars = self.driver.find_elements(By.TAG_NAME, 'input')
+        self.search_bar = None
+        for s in search_bars:
+            try:
+                s.click()
+                s.send_keys('rice')
+                s.submit()
+                self.search_bar = s
+                break
+            except Exception:
+                pass
+            finally:
+                time.sleep(15)
+
+    # Search for item on the Wegmans site
+    # Returns the aisle location of the item
+    def search_item(self, item):
+        # Search for the item in the search bar
+        self.search_bar.click()
+        self.search_bar.send_keys(Keys.CONTROL + "a")
+        self.search_bar.send_keys(Keys.DELETE)
+        self.search_bar.send_keys(item)
+        self.search_bar.submit()
+        time.sleep(30)
+
+        # Grab the aisle location of the first instance of the item
+        section = self.driver.find_element(By.CLASS_NAME, 'css-8uhtka')
+        return section.text
+
+    def quit(self):
+        self.driver.quit()
 
 
-def urllib_search_item(item):
-    search_url = BASE_URL.format(term=item)
-    page = urllib.request.urlopen(search_url)
-    soup = BeautifulSoup(page, 'html.parser')
-    print(soup)
+def parse_input(in_file_name, out_file_name):
+    searches = []
+    with open(in_file_name, mode='r') as input_file:
+        scraper = WegmanScraper()
+
+        ingredient = input_file.readline()
+        while ingredient != '':
+            ingredient = input_file.readline().strip()
+            location = scraper.search_item(ingredient)
+            print(ingredient + "," + location)
+            searches.append((ingredient, location))
+
+        scraper.quit()
+
+    if os.path.isfile(out_file_name):
+        os.remove(out_file_name)
+
+    with open(out_file_name, newline='', mode='a') as output_file:
+        for search in searches:
+            output_file.write(search[0] + ", " + search[1])
 
 
-def selenium_search_item(item):
-    search_url = BASE_URL.format(term=item)
-    driver = webdriver.Chrome()
-    driver.get(search_url)
-
-    # print(driver.page_source)
-    # store = driver.find_element(By.XPATH, '//*[contains(text(), \'Fairfax\')]')
-    # print(store)
-
-    # new_html = driver.page_source.replace('Fairfax', 'Bethlehem')
-
-    # driver.execute_script(new_html)
-    # webbrowser.open(new_html)
-
-    first_item = driver.find_element(By.CLASS_NAME, 'css-8uhtka')
-    print(first_item.get_attribute('innerHTML'))
-
-    driver.quit()
-
-
-def js_from_file():
-    driver = webdriver.Chrome()
-    with open('wegmans_augmented.js', mode='r') as js_file:
-        js_text = js_file.read()
-        driver.execute_script(js_text)
-        print(driver.page_source)
-
-
-def html_from_file():
-    driver = webdriver.Chrome()
-    driver.get('file://choose_store.html')
-    print(driver.page_source)
-
-
-def search_steps(item):
-    driver = webdriver.Chrome()
-    initial_url = 'https://www.wegmans.com/stores/bethlehem-pa/'
-    driver.get(initial_url)
-    print(driver.title)
-
-    shop_store_button = driver.find_element(By.XPATH, '//*[contains(text(), \'Shop this Store\')]')
-    driver.execute_script('arguments[0].click();', shop_store_button)
-    # button.click()
-    print(driver.title)
-    time.sleep(60)
-    print(driver.title)
-
-    buttons = driver.find_elements(By.TAG_NAME, 'button')
-    for b in buttons:
-        if b.text == 'In Store':
-            print(b.get_attribute('innerHTML'))
-            b.click()
-            time.sleep(30)
-            break
-
-    search_bars = driver.find_elements(By.TAG_NAME, 'input')
-    # in_store_button = driver.find_elements(By.XPATH, '//*[contains(text(), \'In Store\')]')
-    # search_bars = driver.find_elements(By.TAG_NAME, 'Form')
-    # search_bars = driver.find_elements(By.XPATH, '//button[@type=\'submit\']')
-
-    # Issue: shop this store button isn't executing correctly
-
-    search_bar = ''
-    for s in search_bars:
-        try:
-            s.click()
-            s.send_keys('rice')
-            s.submit()
-            search_bar = s
-            print(s.get_attribute('innerHTML'))
-            break
-        except Exception:
-            pass
-        finally:
-            time.sleep(15)
-
-    first_item = driver.find_element(By.CLASS_NAME, 'css-8uhtka')
-    print(first_item.get_attribute('innerHTML'))
-
-    """
-    for item in items:
-        if len(item.get_attribute('innerHTML')) < 5:
-            print(item.get_attribute('innerHTML'))
-    i = 3
-    """
-
-
-# header_search_item('rice')
-# selenium_search_item('rice')
-print('lolwtf')
-search_steps('rice')
-
+parse_input('groceries_import', 'groceries_export.csv')
